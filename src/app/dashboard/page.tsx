@@ -5,14 +5,37 @@ import { useState } from "react";
 export default function DashboardPage() {
   const [topic, setTopic] = useState("");
   const [tone, setTone] = useState("professional");
+  const [thread, setThread] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleGenerate = () => {
-    if (!topic.trim()) {
-      alert("Please enter a topic");
-      return;
+  const handleGenerate = async () => {
+    setLoading(true);
+    setError("");
+    setThread("");
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ topic, tone }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setThread(data.thread);
+        console.log("Generated thread:", data.thread);
+      } else {
+        setError(data.error || "something went wrong");
+      }
+    } catch (error) {
+      setError("Failed to connect to API");
+    } finally {
+      setLoading(false);
     }
-    // This will be replaced by actual API call to generate thread
-    console.log("Generating thread for:", topic, "with tone:", tone);
   };
 
   return (
@@ -46,10 +69,14 @@ export default function DashboardPage() {
 
       <button
         onClick={handleGenerate}
-        className="mt-4 bg-white text-black px-6 py-2 rounded hover:bg-gray-200 transition"
+        disabled={loading || !topic.trim()}
+        className="mt-4 bg-white text-black px-6 py-2 rounded hover:bg-gray-200 transition disabled:opacity-50"
       >
-        ✨ Generate Thread
+        ✨ {loading ? "Generating..." : "Generate Thread"}
       </button>
+
+     
+
     </main>
   );
 }
