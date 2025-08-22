@@ -1,14 +1,18 @@
 "use client";
 
 import TweetCard from "@/components/TweetCard";
+import UserWelcome from "@/components/UserWelcome";
 import { useState } from "react";
 
 export default function DashboardPage() {
   const [topic, setTopic] = useState("");
   const [tone, setTone] = useState("professional");
   const [thread, setThread] = useState("");
+  const [individualTweets, setIndividualTweets] = useState<string[]>([]); // Individual tweets array
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [editingIndex, setEditingIndex] = useState<number | null>(null); // Index of tweet being edited
+  const [editValue, setEditValue] = useState<string>(""); // Value for editing tweet
 
   // Function to parse raw thread text into individual tweets
   const parseThread = (rawThread: string): string[] => {
@@ -29,18 +33,40 @@ export default function DashboardPage() {
       .filter(tweet => !tweet.match(/^thread\s*$/i)); // Remove standalone "thread" lines
   };
 
+  const handleEditStart = (index: number) => {
+    setEditingIndex(index);
+    setEditValue(individualTweets[index]);
+  };
+
+  const handleEditSave = (index: number) => {
+    const updatedTweets = [...individualTweets];
+    updatedTweets[index] = editValue;
+    setIndividualTweets(updatedTweets);
+    setEditingIndex(null);
+    setEditValue("");
+  };
+
+  const handleEditCancel = () => {
+    setEditingIndex(null);
+    setEditValue("");
+  };
+
+  const handleEditChange = (value: string) => {
+    setEditValue(value);
+  };
+
   // Copy entire thread function
   const copyEntireThread = () => {
-    const tweets = parseThread(thread);
-    const threadText = tweets.map((tweet, index) => `${index + 1}/ ${tweet}`).join('\n\n');
+    // const tweets = parseThread(thread);
+    const threadText = individualTweets.map((tweet, index) => `${index + 1}/ ${tweet}`).join('\n\n');
     navigator.clipboard.writeText(threadText);
     // Optional: Add toast notification
   };
 
   // Copy thread for Twitter (with proper formatting)
   const copyForTwitter = () => {
-    const tweets = parseThread(thread);
-    const twitterThread = tweets.map((tweet, index) => {
+    // const tweets = parseThread(thread);
+    const twitterThread = individualTweets.map((tweet, index) => {
       if (index === 0) return tweet; // First tweet without numbering
       return `${index + 1}/ ${tweet}`;
     }).join('\n\n');
@@ -51,6 +77,9 @@ export default function DashboardPage() {
     setLoading(true);
     setError("");
     setThread("");
+    setIndividualTweets([]);
+    setEditingIndex(null);
+    setEditValue("");
 
     try {
       const res = await fetch("/api/generate", {
@@ -65,6 +94,9 @@ export default function DashboardPage() {
 
       if (res.ok) {
         setThread(data.thread);
+        const parsedTweets = parseThread(data.thread);
+        setIndividualTweets(parsedTweets);
+        // Optional: Add toast notification for success
       } else {
         setError(data.error || "something went wrong");
       }
@@ -75,10 +107,13 @@ export default function DashboardPage() {
     }
   };
 
-  const tweets = parseThread(thread);
+  // const tweets = parseThread(thread);
 
   return (
     <main className="min-h-screen bg-black text-white p-8">
+      {/* User Welcome Section */}
+      <UserWelcome />
+      
       <h1 className="text-3xl font-bold mb-4">Auto Thread Generator</h1>
 
       <label htmlFor="topic" className="block mb-2 text-lg font-medium">
@@ -122,7 +157,7 @@ export default function DashboardPage() {
       )}
 
      {/* Display generated thread as Twitter-like cards */}
-      {tweets.length > 0 && (
+      {individualTweets.length > 0 && (
         <div className="mt-8">
           {/* Header with multiple copy options */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -145,18 +180,24 @@ export default function DashboardPage() {
 
           {/* Thread Stats */}
           <div className="mb-6 text-gray-400 text-sm">
-            <span>{tweets.length} tweets • </span>
-            <span>{tweets.reduce((total, tweet) => total + tweet.length, 0)} total characters</span>
+            <span>{individualTweets.length} tweets • </span>
+            <span>{individualTweets.reduce((total, tweet) => total + tweet.length, 0)} total characters</span>
           </div>
 
           {/* Tweet Cards Container */}
           <div className="max-w-2xl mx-auto sm:mx-0">
-            {tweets.map((tweet, index) => (
+            {individualTweets.map((tweet, index) => (
               <TweetCard
                 key={index}
                 content={tweet}
                 index={index}
-                total={tweets.length}
+                total={individualTweets.length}
+                isEditing={editingIndex === index}
+                editValue={editValue}
+                onEditStart={() => handleEditStart(index)}
+                onEditSave={() => handleEditSave(index)}
+                onEditCancel={handleEditCancel}
+                onEditChange={handleEditChange}
               />
             ))}
           </div>
