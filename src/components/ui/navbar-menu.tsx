@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { motion } from "motion/react";
+import Image from "next/image";
 
 
 
@@ -25,12 +26,18 @@ export const MenuItem = ({
   children?: React.ReactNode;
 }) => {
   return (
-    <div onMouseEnter={() => setActive(item)} className="relative ">
+    <div onMouseEnter={() => setActive(item)} className="relative group">
       <motion.p
         transition={{ duration: 0.3 }}
-        className="cursor-pointer text-white hover:opacity-[0.9]"
+        className="cursor-pointer text-white/90 hover:text-white font-medium px-4 py-2 rounded-lg relative overflow-hidden transition-all duration-300 hover:bg-cyan-400/10 hover:shadow-lg hover:shadow-cyan-400/20 border border-transparent hover:border-cyan-400/30"
       >
-        {item}
+        {/* Subtle glow effect on hover */}
+        <span className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-400/5 to-cyan-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+        
+        {/* Animated underline */}
+        <span className="absolute bottom-1 left-1/2 w-0 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-500 group-hover:w-3/4 group-hover:left-1/8 transition-all duration-300 rounded-full"></span>
+        
+        <span className="relative z-10">{item}</span>
       </motion.p>
       {active !== null && (
         <motion.div
@@ -43,7 +50,7 @@ export const MenuItem = ({
               <motion.div
                 transition={transition}
                 layoutId="active" // layoutId ensures smooth animation
-                className="bg-black/30 backdrop-blur-xl rounded-2xl overflow-hidden border border-cyan-400/60 shadow-2xl shadow-cyan-500/30"
+                className="bg-black/80 backdrop-blur-xl rounded-2xl overflow-hidden border border-cyan-400/40 shadow-2xl shadow-cyan-500/25"
               >
                 <motion.div
                   layout // layout ensures smooth animation
@@ -70,7 +77,7 @@ export const Menu = ({
   return (
     <nav
       onMouseLeave={() => setActive(null)} // resets the state
-      className="relative rounded-full bg-black/40 backdrop-blur-xl border border-cyan-400/50 shadow-2xl shadow-cyan-500/20 flex justify-center space-x-4 px-8 py-6"
+      className="relative rounded-full bg-black/40 backdrop-blur-xl border border-cyan-400/50 shadow-xl shadow-cyan-500/20 flex justify-center items-center space-x-2 px-6 py-3 hover:shadow-cyan-500/30 hover:border-cyan-400/60 transition-all duration-300"
     >
       {children}
     </nav>
@@ -90,7 +97,7 @@ export const ProductItem = ({
 }) => {
   return (
     <a href={href} className="flex space-x-2">
-      <img
+      <Image
         src={src}
         width={140}
         height={70}
@@ -109,7 +116,7 @@ export const ProductItem = ({
   );
 };
 
-export const HoveredLink = ({ children, ...rest }: any) => {
+export const HoveredLink = ({ children, ...rest }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
   return (
     <a
       {...rest}

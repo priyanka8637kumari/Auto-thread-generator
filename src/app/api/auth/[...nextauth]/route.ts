@@ -1,5 +1,16 @@
 import NextAuth from "next-auth";
 import TwitterProvider from "next-auth/providers/twitter";
+import { Session, User } from "next-auth";
+import { JWT } from "next-auth/jwt";
+
+interface ExtendedSession extends Session {
+  user: {
+    id?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  }
+}
 
 const handler = NextAuth({
   providers: [
@@ -10,9 +21,12 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    async session({ session, token }) {
-      (session.user as any).id = token.sub; // Attach user ID if needed
-      return session;
+    async session({ session, token }: { session: Session; token: JWT }): Promise<ExtendedSession> {
+      const extendedSession = session as ExtendedSession;
+      if (extendedSession.user) {
+        extendedSession.user.id = token.sub; // Attach user ID if needed
+      }
+      return extendedSession;
     },
   },
 });

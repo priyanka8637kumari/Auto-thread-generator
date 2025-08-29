@@ -18,7 +18,8 @@ export async function POST(req: Request) {
   try {
     const thread = await generateThread(topic, tone);
     return NextResponse.json({ thread });
-  } catch (error) {
+  } catch (err) {
+    console.error("Thread generation error:", err);
     return NextResponse.json(
       {
         error: "Failed to generate thread",
