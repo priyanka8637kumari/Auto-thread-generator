@@ -8,6 +8,8 @@ interface TweetCardProps {
   onEditSave?: () => void;
   onEditCancel?: () => void;
   onEditChange?: (value: string) => void;
+  userName?: string;
+  userHandle?: string;
 }
 
 const TweetCard = ({
@@ -20,6 +22,8 @@ const TweetCard = ({
   onEditSave,
   onEditCancel,
   onEditChange,
+  userName = "You",
+  userHandle = "@username",
 }: TweetCardProps) => {
   // Fix: Use dynamic character count based on edit mode
   const charCount = isEditing ? editValue.length : content.length;
@@ -55,8 +59,8 @@ const TweetCard = ({
             <span className="text-cyan-300 font-bold text-lg">👤</span>
           </div>
           <div>
-            <div className="font-bold text-white">You</div>
-            <div className="text-cyan-300/70 text-sm">@your_handle</div>
+            <div className="font-bold text-white">{userName}</div>
+            <div className="text-cyan-300/70 text-sm">{userHandle}</div>
           </div>
         </div>
 

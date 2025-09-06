@@ -19,6 +19,7 @@ interface ExtendedSession {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    username?: string | null;
   };
   accessToken?: string;
 }
@@ -38,10 +39,57 @@ export default function DashboardPage() {
   const [postingProgress, setPostingProgress] = useState(0); // Progress for bulk posting
   const [postingIndex, setPostingIndex] = useState<number | null>(null); // Which tweet is being posted
   const [showRetryWithUnique, setShowRetryWithUnique] = useState(false); // Show retry option for duplicates
+  const [twitterUsername, setTwitterUsername] = useState<string | null>(null); // Fallback Twitter username
 
   // Get session from NextAuth
   const { data: sessionData } = useSession();
   const session = sessionData as ExtendedSession;
+
+  // Debug session data
+  useEffect(() => {
+    if (session) {
+      console.log('Current session data:', {
+        user: session.user,
+        hasAccessToken: !!session.accessToken,
+        username: session.user?.username,
+      });
+    }
+  }, [session]);
+
+  // Fetch Twitter username if missing from session
+  useEffect(() => {
+    const fetchTwitterUsername = async () => {
+      // Only fetch if we have an access token but no username
+      if (session?.accessToken && !session?.user?.username && !twitterUsername) {
+        console.log('Attempting to fetch Twitter username via API...');
+        try {
+          const response = await fetch('/api/twitter/profile', {
+            headers: {
+              'Authorization': `Bearer ${session.accessToken}`,
+            },
+          });
+          
+          console.log('Profile API response status:', response.status);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Profile API data:', data);
+            if (data.username) {
+              setTwitterUsername(data.username);
+              console.log('Successfully set Twitter username:', data.username);
+            }
+          } else {
+            const errorData = await response.json();
+            console.error('Failed to fetch Twitter username:', errorData);
+          }
+        } catch (error) {
+          console.error('Error fetching Twitter username:', error);
+        }
+      }
+    };
+
+    fetchTwitterUsername();
+  }, [session?.accessToken, session?.user?.username, twitterUsername]);
 
   // Function to connect Twitter account
   const handleConnectTwitter = () => {
@@ -683,6 +731,14 @@ export default function DashboardPage() {
                   onEditSave={() => handleEditSave(index)}
                   onEditCancel={handleEditCancel}
                   onEditChange={handleEditChange}
+                  userName={session?.user?.name || "You"}
+                  userHandle={
+                    session?.user?.username 
+                      ? `@${session.user.username}` 
+                      : twitterUsername 
+                        ? `@${twitterUsername}`
+                        : "@username"
+                  }
                 />
               ))}
             </div>
@@ -724,7 +780,13 @@ export default function DashboardPage() {
                     </h2>
                     <p className="text-gray-400 text-sm">
                       {session?.accessToken 
-                        ? (session?.user?.name ? `Connected as @${session.user.name}` : 'Share your thread with the world')
+                        ? (session?.user?.username 
+                            ? `Connected as @${session.user.username}` 
+                            : twitterUsername
+                              ? `Connected as @${twitterUsername}`
+                              : session?.user?.name 
+                                ? `Connected as ${session.user.name}` 
+                                : 'Share your thread with the world')
                         : 'Connect your X account to post threads'
                       }
                     </p>
