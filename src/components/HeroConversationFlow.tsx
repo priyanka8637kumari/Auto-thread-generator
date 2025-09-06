@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { Play, MoreHorizontal, MessageCircle, Repeat2, Heart } from "lucide-react";
+import { AnimatedTooltip } from "./ui/animated-tooltip";
+import { people } from "@/data/people";
 
 interface HeroConversationFlowProps {
   headline?: string;
@@ -104,9 +106,6 @@ const HeroConversationFlow: React.FC<HeroConversationFlowProps> = ({
       className={`relative min-h-screen flex items-center justify-center overflow-hidden ${className}`}
       aria-live="polite"
     >
-      {/* Full-bleed gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#000000] via-[#0f172a] to-[#1e293b]"></div>
-      
       {/* Subtle dotted grid overlay */}
       <div 
         className="absolute inset-0 opacity-20"
@@ -117,28 +116,28 @@ const HeroConversationFlow: React.FC<HeroConversationFlowProps> = ({
       ></div>
 
       {/* Floating gradient spots */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-radial from-cyan-400/20 to-transparent rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-radial from-blue-400/15 to-transparent rounded-full blur-3xl animate-pulse delay-1000"></div>
+      <div className="absolute top-1/4 left-1/4 w-64 sm:w-80 lg:w-96 h-64 sm:h-80 lg:h-96 bg-gradient-radial from-cyan-400/20 to-transparent rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-56 sm:w-64 lg:w-80 h-56 sm:h-64 lg:h-80 bg-gradient-radial from-blue-400/15 to-transparent rounded-full blur-3xl animate-pulse delay-1000"></div>
 
       {/* Content container */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-16 lg:pt-20 pb-12 sm:pb-16 lg:pb-20">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           
           {/* Left Column - Copy & CTAs */}
-          <div className="text-center lg:text-left space-y-8">
-            <header className="space-y-6">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+          <div className="text-center lg:text-left space-y-6 sm:space-y-8">
+            <header className="space-y-4 sm:space-y-6">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
                 {headline}
               </h1>
-              <p className="text-xl md:text-2xl text-gray-300 leading-relaxed max-w-2xl lg:max-w-none">
+              <p className="text-lg sm:text-xl md:text-2xl text-gray-300 leading-relaxed max-w-2xl lg:max-w-none mx-auto lg:mx-0">
                 {subtext}
               </p>
             </header>
 
-            <nav className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start" role="navigation" aria-label="Primary actions">
+            <nav className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start" role="navigation" aria-label="Primary actions">
               <motion.button
                 onClick={onPrimaryClick}
-                className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:from-cyan-500 hover:to-blue-600 transition-all duration-300 shadow-lg shadow-cyan-400/25 hover:shadow-cyan-400/40 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black"
+                className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-4 sm:px-6 py-3 rounded-2xl font-semibold text-base sm:text-lg hover:from-cyan-500 hover:to-blue-600 transition-all duration-300 shadow-lg shadow-cyan-400/25 hover:shadow-cyan-400/40 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 aria-label="Generate your first Twitter thread"
@@ -148,7 +147,7 @@ const HeroConversationFlow: React.FC<HeroConversationFlowProps> = ({
               
               <motion.button
                 onClick={onSecondaryClick}
-                className="text-gray-300 px-8 py-4 rounded-2xl font-medium text-lg hover:text-white transition-all duration-300 border border-gray-600 hover:border-cyan-400/50 bg-black/40 backdrop-blur-sm hover:bg-cyan-400/10 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-black group"
+                className="text-gray-300 px-4 sm:px-6 py-3 rounded-2xl font-medium text-base sm:text-lg hover:text-white transition-all duration-300 border border-gray-600 hover:border-cyan-400/50 bg-black/40 backdrop-blur-sm hover:bg-cyan-400/10 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-black group"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 aria-label="Watch a 30 second demo"
@@ -161,26 +160,20 @@ const HeroConversationFlow: React.FC<HeroConversationFlowProps> = ({
             </nav>
 
             {/* Trust line with avatars */}
-            <div className="flex items-center gap-4 justify-center lg:justify-start">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 p-4 sm:p-6 justify-center lg:justify-start">
               <div className="flex -space-x-2">
-                {avatarUsers.map((user, index) => (
-                  <div
-                    key={index}
-                    className={`w-8 h-8 rounded-full bg-gradient-to-br ${user.color} flex items-center justify-center text-white text-xs font-bold border-2 border-black shadow-lg`}
-                  >
-                    {user.initials}
-                  </div>
-                ))}
+                <AnimatedTooltip items={people}/>
               </div>
-              <p className="text-gray-400 text-sm font-medium">
+              
+              <p className="text-gray-400 text-sm font-medium text-center sm:text-left">
                 Trusted by 10,000+ creators
               </p>
             </div>
           </div>
 
           {/* Right Column - Animated Twitter Thread Mock */}
-          <div className="flex justify-center lg:justify-end">
-            <div className="w-full max-w-md">
+          <div className="flex justify-center lg:justify-end mt-8 lg:mt-0">
+            <div className="w-full max-w-sm sm:max-w-md">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -190,8 +183,8 @@ const HeroConversationFlow: React.FC<HeroConversationFlowProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold">
-                      AT
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center">
+                      <img src="/logo.webp" alt="AutoThread Logo" className="w-12 h-12 rounded-full object-cover"/>
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -207,10 +200,10 @@ const HeroConversationFlow: React.FC<HeroConversationFlowProps> = ({
                 </div>
 
                 {/* Thread Body */}
-                <div className="p-4 space-y-4">
+                <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
                   {messages.map((message, lineIndex) => (
                     <div key={lineIndex} className="space-y-2">
-                      <div className="text-gray-100 leading-relaxed">
+                      <div className="text-gray-100 leading-relaxed text-sm sm:text-base">
                         {lineIndex <= currentLineIndex && (
                           <span>
                             {lineIndex === currentLineIndex 
@@ -231,7 +224,7 @@ const HeroConversationFlow: React.FC<HeroConversationFlowProps> = ({
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="flex items-center gap-6 text-gray-400 text-sm"
+                            className="flex items-center gap-4 sm:gap-6 text-gray-400 text-xs sm:text-sm"
                           >
                             <div className="flex items-center gap-1 hover:text-cyan-400 transition-colors cursor-pointer">
                               <MessageCircle className="w-4 h-4" />
@@ -253,10 +246,10 @@ const HeroConversationFlow: React.FC<HeroConversationFlowProps> = ({
                 </div>
 
                 {/* Replay Button */}
-                <div className="p-4 border-t border-gray-700/50">
+                <div className="p-3 sm:p-4 border-t border-gray-700/50">
                   <motion.button
                     onClick={resetAnimation}
-                    className="w-full bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 py-2 px-4 rounded-lg transition-all duration-200 font-medium text-sm border border-cyan-400/30 hover:border-cyan-400/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black"
+                    className="w-full bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 py-2 px-4 rounded-lg transition-all duration-200 font-medium text-xs sm:text-sm border border-cyan-400/30 hover:border-cyan-400/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     aria-label="Replay thread animation"

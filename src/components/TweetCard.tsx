@@ -79,8 +79,8 @@ const TweetCard = ({
               </div>
             </div>
           ) : (
-            <div className="text-gray-100 leading-relaxed text-[15px]">
-              {content}
+            <div className="text-gray-100 leading-relaxed text-[15px] whitespace-pre-line">
+              {content.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '')}
             </div>
           )}
         </div>

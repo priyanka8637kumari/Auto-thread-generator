@@ -50,28 +50,28 @@ const HeroSection = () => {
       />
 
       {/* Enhanced Social Proof Section */}
-      <div className="relative px-6 pb-20">
+      {/* <div className="relative px-6 pb-20">
         <div className="max-w-4xl mx-auto">
-          <div className="mt-16 relative">
+          <div className="mt-16 relative"> */}
             {/* Background Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-blue-500/5 rounded-3xl blur-xl"></div>
+            {/* <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-blue-500/5 rounded-3xl blur-xl"></div>
             
-            <div className="relative z-10 bg-black/20 backdrop-blur-sm rounded-3xl border border-cyan-400/20 p-8 shadow-xl shadow-cyan-400/10">
+            <div className="relative z-10 bg-black/20 backdrop-blur-sm rounded-3xl border border-cyan-400/20 p-8 shadow-xl shadow-cyan-400/10"> */}
               {/* Headline */}
-              <div className="text-center mb-8">
+              {/* <div className="text-center mb-8">
                 <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
                   Trusted by <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">10,000+</span> creators and developers
                 </h3>
                 <div className="w-16 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-500 mx-auto rounded-full"></div>
-              </div>
+              </div> */}
 
               {/* Avatar Row */}
-              <div className="flex flex-row items-center justify-center mb-8 w-full">
+              {/* <div className="flex flex-row items-center justify-center mb-8 w-full">
                 <AnimatedTooltip items={people} />
-              </div>
+              </div> */}
 
               {/* Testimonial Quotes */}
-              <div className="space-y-6">
+              {/* <div className="space-y-6">
                 <blockquote className="text-center">
                   <p className="text-gray-300 italic text-lg md:text-xl font-light leading-relaxed max-w-2xl mx-auto">
                     "This tool helped me grow my following by 3x in 2 months."
@@ -96,10 +96,10 @@ const HeroSection = () => {
                       <span>Featured on Product Hunt</span>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Mobile stats - stacked version */}
-                <div className="md:hidden space-y-3 text-center">
+                {/* <div className="md:hidden space-y-3 text-center">
                   <div className="flex items-center justify-center gap-2 text-gray-400 text-sm">
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                     <span>500+ threads generated daily</span>
@@ -113,10 +113,10 @@ const HeroSection = () => {
                     <span>Featured on Product Hunt</span>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Additional Testimonial Slider */}
-              <div className="mt-8 pt-6 border-t border-cyan-400/20">
+              {/* <div className="mt-8 pt-6 border-t border-cyan-400/20">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="text-center md:text-left">
                     <p className="text-gray-300 italic text-base leading-relaxed">
@@ -135,11 +135,11 @@ const HeroSection = () => {
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </div> */}
+            {/* </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Demo Modal */}
       <DemoModal 

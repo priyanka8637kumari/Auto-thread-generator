@@ -9,6 +9,19 @@ import {
   downloadThread,
   type ThreadData 
 } from "@/lib/utils";
+import { useSession, signIn } from "next-auth/react";
+import { makeThreadUnique } from "@/lib/twitter";
+
+// Define extended session type to include accessToken
+interface ExtendedSession {
+  user?: {
+    id?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
+  accessToken?: string;
+}
 
 export default function DashboardPage() {
   const [topic, setTopic] = useState("");
@@ -20,9 +33,81 @@ export default function DashboardPage() {
   const [editValue, setEditValue] = useState<string>(""); // Value for editing tweet
   const [showDownloadMenu, setShowDownloadMenu] = useState(false); // For dropdown menu
   const [showPostToTwitter, setShowPostToTwitter] = useState(false); // Post to Twitter modal
+  const [successMessage, setSuccessMessage] = useState(""); // Success notifications
   const [isPosting, setIsPosting] = useState(false); // Posting state
-  const [postingIndex, setPostingIndex] = useState<number | null>(null); // Which tweet is being posted
   const [postingProgress, setPostingProgress] = useState(0); // Progress for bulk posting
+  const [postingIndex, setPostingIndex] = useState<number | null>(null); // Which tweet is being posted
+  const [showRetryWithUnique, setShowRetryWithUnique] = useState(false); // Show retry option for duplicates
+
+  // Get session from NextAuth
+  const { data: sessionData } = useSession();
+  const session = sessionData as ExtendedSession;
+
+  // Function to connect Twitter account
+  const handleConnectTwitter = () => {
+    signIn('twitter');
+  };
+
+  // Function to retry posting with unique content
+  const handleRetryWithUniqueContent = async () => {
+    if (individualTweets.length === 0) return;
+    
+    if (!session?.accessToken) {
+      setError('Twitter access token not available. Please log in again.');
+      return;
+    }
+
+    // Make tweets unique
+    const uniqueTweets = makeThreadUnique(individualTweets);
+    
+    setIsPosting(true);
+    setPostingProgress(0);
+    setShowRetryWithUnique(false);
+    setError(""); // Clear previous error
+
+    try {
+      const response = await fetch('/api/twitter/post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'thread',
+          content: { tweets: uniqueTweets },
+          accessToken: session.accessToken,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        // Handle errors for retry attempt
+        if (data.type === 'DUPLICATE_CONTENT') {
+          setError(`${data.error} The content is still too similar. Try manually editing the tweets.`);
+        } else {
+          setError(data.error || 'Failed to post thread');
+        }
+        throw new Error(data.error || 'Failed to post thread');
+      }
+
+      setPostingProgress(100);
+      setSuccessMessage(`Thread with ${uniqueTweets.length} tweets posted successfully with unique content!`);
+      setTimeout(() => setSuccessMessage(""), 5000);
+      setShowPostToTwitter(false);
+
+    } catch (error) {
+      console.error('Retry thread posting failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to post thread';
+      setError(errorMessage);
+      setTimeout(() => setError(""), 5000);
+    } finally {
+      setTimeout(() => {
+        setIsPosting(false);
+        setPostingProgress(0);
+        setPostingIndex(null);
+      }, 1000);
+    }
+  };
 
   // Function to parse raw thread text into individual tweets
   const parseThread = (rawThread: string): string[] => {
@@ -32,15 +117,23 @@ export default function DashboardPage() {
       .split('\n') // Split by line breaks
       .filter(line => line.trim() !== '') // Remove empty lines
       .map(tweet => {
-        // Remove numbering patterns like "1/", "1.", "1)", "Thread 1:", etc.
+        // Remove various numbering patterns
         return tweet
           .replace(/^\d+[\/\.\)\:]\s*/, '') // Remove "1/" "1." "1)" "1:"
           .replace(/^Thread\s+\d+\s*[:\-]\s*/i, '') // Remove "Thread 1:" or "Thread 1-"
-          .replace(/^\*\*\d+[\/\.\)]\*\*\s*/, '') // Remove "**1/**" markdown
+          .replace(/^\*\*\d+\/\d+\*\*\s*/, '') // Remove "**1/5**" patterns
+          .replace(/^\*\*\d+[\/\.\)]\*\*\s*/, '') // Remove "**1/**" "**1.**" etc.
+          .replace(/^\*\*Tweet\s+\d+[:\*]*\s*/, '') // Remove "**Tweet 1:**" patterns
+          .replace(/^Tweet\s+\d+[:\-\s]*/, '') // Remove "Tweet 1:" patterns
+          .replace(/^\(\d+\/\d+\)\s*/, '') // Remove "(1/5)" patterns
+          .replace(/^\[\d+\/\d+\]\s*/, '') // Remove "[1/5]" patterns
+          .replace(/^\d+\/\d+\s*[\-\:]*\s*/, '') // Remove "1/5 -" or "1/5:" patterns
           .trim();
       })
       .filter(tweet => tweet.length > 0) // Remove empty tweets after cleaning
-      .filter(tweet => !tweet.match(/^thread\s*$/i)); // Remove standalone "thread" lines
+      .filter(tweet => !tweet.match(/^thread\s*$/i)) // Remove standalone "thread" lines
+      .filter(tweet => !tweet.match(/^\d+\/\d+\s*$/)) // Remove standalone numbering like "1/5"
+      .filter(tweet => !tweet.match(/^\*\*\d+\/\d+\*\*\s*$/)); // Remove standalone "**1/5**"
   };
 
   const handleEditStart = (index: number) => {
@@ -149,29 +242,58 @@ export default function DashboardPage() {
     }
   };
 
-  // Twitter posting handlers (UI only for now)
+  // Twitter posting handlers (using NextAuth session)
   const handlePostToTwitter = () => {
     setShowPostToTwitter(true);
   };
 
   const handlePostSingleTweet = async (index: number) => {
-    // TODO: Implement actual Twitter API call
+    if (!session?.accessToken) {
+      setError('Twitter access token not available. Please log in again.');
+      return;
+    }
+
     setPostingIndex(index);
     setIsPosting(true);
-    
+
     try {
-      // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await fetch('/api/twitter/post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'single',
+          content: { text: individualTweets[index] },
+          accessToken: session.accessToken,
+        }),
+      });
+
+      const data = await response.json();
       
-      // TODO: Replace with actual Twitter API integration
-      console.log(`Posting tweet ${index + 1}:`, individualTweets[index]);
-      
-      // Show success message (you can replace with a toast notification)
-      alert(`Tweet ${index + 1} posted successfully! (This is a demo)`);
-      
+      if (!response.ok) {
+        // Handle specific error types for better user feedback
+        if (data.type === 'DUPLICATE_CONTENT') {
+          throw new Error(`${data.error} Try modifying the tweet content.`);
+        } else if (data.type === 'RATE_LIMIT') {
+          throw new Error(`${data.error} You can try again in 15 minutes.`);
+        } else if (data.type === 'AUTH_ERROR') {
+          throw new Error(`${data.error} Please refresh the page and log in again.`);
+        } else if (data.type === 'CHARACTER_LIMIT') {
+          throw new Error(`${data.error} Please shorten your tweet.`);
+        } else {
+          throw new Error(data.error || 'Failed to post tweet');
+        }
+      }
+
+      setSuccessMessage(`Tweet ${index + 1} posted successfully!`);
+      setTimeout(() => setSuccessMessage(""), 5000);
+
     } catch (error) {
       console.error('Post failed:', error);
-      setError(`Failed to post tweet ${index + 1}. Please try again.`);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to post tweet';
+      setError(errorMessage);
+      setTimeout(() => setError(""), 5000);
     } finally {
       setIsPosting(false);
       setPostingIndex(null);
@@ -181,44 +303,79 @@ export default function DashboardPage() {
   const handlePostEntireThread = async () => {
     if (individualTweets.length === 0) return;
     
+    if (!session?.accessToken) {
+      setError('Twitter access token not available. Please log in again.');
+      return;
+    }
+
     setIsPosting(true);
     setPostingProgress(0);
-    
+
     try {
-      for (let i = 0; i < individualTweets.length; i++) {
-        setPostingIndex(i);
-        setPostingProgress(((i + 1) / individualTweets.length) * 100);
-        
-        // TODO: Implement actual Twitter API call with proper thread replies
-        await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate API delay
-        
-        console.log(`Posted tweet ${i + 1}:`, individualTweets[i]);
+      const response = await fetch('/api/twitter/post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'thread',
+          content: { tweets: individualTweets },
+          accessToken: session.accessToken,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        // Handle specific error types
+        if (data.type === 'DUPLICATE_CONTENT') {
+          setError(`${data.error} Try editing the content or click "Try with Unique Content" below.`);
+          setShowRetryWithUnique(true);
+        } else if (data.type === 'RATE_LIMIT') {
+          setError(`${data.error} You can try again in 15 minutes.`);
+          setShowRetryWithUnique(false);
+        } else if (data.type === 'AUTH_ERROR') {
+          setError(`${data.error} Please refresh the page and log in again.`);
+          setShowRetryWithUnique(false);
+        } else {
+          setError(data.error || 'Failed to post thread');
+          setShowRetryWithUnique(false);
+        }
+        throw new Error(data.error || 'Failed to post thread');
       }
-      
-      // Show success message
-      alert(`Entire thread posted successfully! (This is a demo)`);
+
+      setPostingProgress(100);
+      setSuccessMessage(`Thread with ${individualTweets.length} tweets posted successfully!`);
+      setTimeout(() => setSuccessMessage(""), 5000);
       setShowPostToTwitter(false);
-      
+
     } catch (error) {
       console.error('Thread posting failed:', error);
-      setError('Failed to post thread. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to post thread';
+      setError(errorMessage);
+      setTimeout(() => setError(""), 5000);
     } finally {
-      setIsPosting(false);
-      setPostingIndex(null);
-      setPostingProgress(0);
+      setTimeout(() => {
+        setIsPosting(false);
+        setPostingProgress(0);
+        setPostingIndex(null);
+      }, 1000);
     }
   };
 
   const handleCancelPosting = () => {
     setShowPostToTwitter(false);
     setIsPosting(false);
-    setPostingIndex(null);
     setPostingProgress(0);
+    setPostingIndex(null);
+    setShowRetryWithUnique(false);
   };
 
   const handleGenerate = async () => {
     setLoading(true);
     setError("");
+    setSuccessMessage("");
+    setShowRetryWithUnique(false);
     setIndividualTweets([]);
     setEditingIndex(null);
     setEditValue("");
@@ -357,9 +514,53 @@ export default function DashboardPage() {
         {error && (
           <div className="max-w-4xl mx-auto mb-8">
             <div className="bg-red-900/40 backdrop-blur-lg border border-red-500/30 rounded-2xl p-6 shadow-xl shadow-red-500/10">
-              <p className="text-red-200 flex items-center gap-3 text-lg">
+              <p className="text-red-200 flex items-center gap-3 text-lg mb-4">
                 <span className="text-2xl">❌</span>
                 <span className="font-medium">{error}</span>
+              </p>
+              
+              {/* Show retry button for duplicate content */}
+              {showRetryWithUnique && (
+                <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={handleRetryWithUniqueContent}
+                    disabled={isPosting}
+                    className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 font-medium shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isPosting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Posting...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                        </svg>
+                        🎯 Try with Unique Content
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setShowRetryWithUnique(false)}
+                    disabled={isPosting}
+                    className="text-gray-300 hover:text-white transition-colors px-4 py-3 border border-gray-600 hover:border-gray-500 rounded-xl bg-black/40 hover:bg-black/60 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Display success */}
+        {successMessage && (
+          <div className="max-w-4xl mx-auto mb-8">
+            <div className="bg-green-900/40 backdrop-blur-lg border border-green-500/30 rounded-2xl p-6 shadow-xl shadow-green-500/10">
+              <p className="text-green-200 flex items-center gap-3 text-lg">
+                <span className="text-2xl">✅</span>
+                <span className="font-medium">{successMessage}</span>
               </p>
             </div>
           </div>
@@ -408,7 +609,7 @@ export default function DashboardPage() {
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                     </svg>
-                    🚀 Post to X
+                    🚀 {session?.accessToken ? 'Post to X' : 'Connect to X'}
                   </button>
                   
                   {/* Single Download Button with Dropdown */}
@@ -518,8 +719,15 @@ export default function DashboardPage() {
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white">Post to X (Twitter)</h2>
-                    <p className="text-gray-400 text-sm">Share your thread with the world</p>
+                    <h2 className="text-2xl font-bold text-white">
+                      {session?.accessToken ? 'Post to X (Twitter)' : 'Connect to X (Twitter)'}
+                    </h2>
+                    <p className="text-gray-400 text-sm">
+                      {session?.accessToken 
+                        ? (session?.user?.name ? `Connected as @${session.user.name}` : 'Share your thread with the world')
+                        : 'Connect your X account to post threads'
+                      }
+                    </p>
                   </div>
                 </div>
                 {!isPosting && (
@@ -555,70 +763,75 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                {/* Thread Preview */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-white mb-4">Thread Preview</h3>
-                  {individualTweets.map((tweet, index) => (
-                    <div 
-                      key={index}
-                      className={`glass-card rounded-2xl p-4 transition-all duration-300 ${
-                        postingIndex === index 
-                          ? 'ring-2 ring-blue-500 bg-blue-500/10' 
-                          : postingIndex !== null && index < postingIndex 
-                            ? 'ring-2 ring-green-500 bg-green-500/10' 
-                            : ''
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0">
-                          {postingIndex !== null && index < postingIndex ? (
-                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
+                {/* Thread Preview (only if connected) */}
+                {session?.accessToken && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white mb-4">Thread Preview</h3>
+                    {individualTweets.map((tweet, index) => (
+                      <div 
+                        key={index}
+                        className={`glass-card rounded-2xl p-4 transition-all duration-300 ${
+                          postingIndex === index 
+                            ? 'ring-2 ring-blue-500 bg-blue-500/10' 
+                            : postingIndex !== null && index < postingIndex 
+                              ? 'ring-2 ring-green-500 bg-green-500/10' 
+                              : ''
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0">
+                            {postingIndex !== null && index < postingIndex ? (
+                              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            ) : postingIndex === index ? (
+                              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                {index + 1}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-gray-200 leading-relaxed">{tweet}</p>
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-xs text-gray-400">
+                                {tweet.length}/280 characters
+                              </span>
+                              <button
+                                onClick={() => handlePostSingleTweet(index)}
+                                disabled={isPosting || !session?.accessToken}
+                                className="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Post Individual
+                              </button>
                             </div>
-                          ) : postingIndex === index ? (
-                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            </div>
-                          ) : (
-                            <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                              {index + 1}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-gray-200 leading-relaxed">{tweet}</p>
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="text-xs text-gray-400">
-                              {tweet.length}/280 characters
-                            </span>
-                            <button
-                              onClick={() => handlePostSingleTweet(index)}
-                              disabled={isPosting}
-                              className="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              Post Individual
-                            </button>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
 
-                {/* Warning/Info Box */}
-                <div className="mt-6 bg-yellow-900/30 border border-yellow-500/30 rounded-2xl p-4">
+                {/* Info Box */}
+                <div className="mt-6 bg-blue-900/30 border border-blue-500/30 rounded-2xl p-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 text-yellow-400 flex-shrink-0">
+                    <div className="w-6 h-6 text-blue-400 flex-shrink-0">
                       <svg fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                       </svg>
                     </div>
                     <div>
-                      <h4 className="text-yellow-400 font-medium mb-1">Demo Mode</h4>
-                      <p className="text-yellow-200 text-sm">
-                        This is currently a UI demo. To enable actual Twitter posting, you'll need to integrate with the Twitter API and handle authentication.
+                      <h4 className="text-blue-400 font-medium mb-1">Twitter Integration</h4>
+                      <p className="text-blue-200 text-sm">
+                        {session?.accessToken 
+                          ? "Your thread will be posted as a series of connected tweets. The first tweet will appear without numbering, while subsequent tweets will be numbered."
+                          : "Connect your X account to enable posting. Your credentials are kept secure and only used for posting threads."
+                        }
                       </p>
                     </div>
                   </div>
@@ -635,25 +848,38 @@ export default function DashboardPage() {
                   >
                     {isPosting ? 'Posting...' : 'Cancel'}
                   </button>
-                  <button
-                    onClick={handlePostEntireThread}
-                    disabled={isPosting || individualTweets.length === 0}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl transition-all duration-300 flex items-center gap-2 font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isPosting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Posting Thread...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                        </svg>
-                        Post Entire Thread ({individualTweets.length} tweets)
-                      </>
-                    )}
-                  </button>
+                  
+                  {session?.accessToken ? (
+                    <button
+                      onClick={handlePostEntireThread}
+                      disabled={isPosting || individualTweets.length === 0}
+                      className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl transition-all duration-300 flex items-center gap-2 font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isPosting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Posting Thread...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                          </svg>
+                          Post Entire Thread ({individualTweets.length} tweets)
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleConnectTwitter}
+                      className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-300 flex items-center gap-2 font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                      </svg>
+                      Connect X Account
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

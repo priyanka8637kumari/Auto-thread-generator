@@ -4,7 +4,16 @@ import { geminiModel } from "./gemini";
 export async function generateThread(topic: string, tone: string) {
   const prompt = `
 You are an expert social media content creator. Write a 5-tweet thread on the topic "${topic}" in a ${tone} tone. 
-Each tweet should be engaging and concise. Add line breaks between tweets.
+
+IMPORTANT FORMATTING RULES:
+- Each tweet should be engaging and concise (under 280 characters)
+- Separate each tweet with a line break
+- Do NOT include any numbering like "1/5", "**1/5**", "Tweet 1:", etc.
+- Do NOT include thread indicators or counters
+- Just write the content of each tweet naturally
+- Each tweet should stand alone but flow together as a cohesive thread
+
+Focus on creating valuable, engaging content without any formatting markers or numbering.
 `;
 
   try {

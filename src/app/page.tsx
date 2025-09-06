@@ -40,8 +40,12 @@ export default function Home() {
         />
         
         {/* Navigation */}
-       <nav className="w-full p-6 relative z-20 mb-16">
-        <div className="flex justify-center">
+       <nav className="w-full pt-6 relative z-20">
+        <div className="flex justify-between items-center max-w-7xl mx-auto px-4">
+          <div className="flex items-center gap-3 pt-2">
+            <img src="/logo.webp" alt="AutoThread AI" className="w-12 h-12 rounded-full object-cover" />
+            <span className="text-white font-bold text-xl">AutoThread</span>
+          </div>
           <Navbar />
         </div>
       </nav>
