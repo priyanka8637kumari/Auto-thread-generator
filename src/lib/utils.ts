@@ -121,7 +121,7 @@ export function formatThreadAsCsv(
   const { includeStats = true } = options;
 
   // CSV Headers
-  let headers = ['Tweet Number', 'Content'];
+  const headers = ['Tweet Number', 'Content'];
   if (includeStats) {
     headers.push('Character Count', 'Word Count');
   }
@@ -148,7 +148,7 @@ export function formatThreadAsCsv(
 
   // Add tweets data
   threadData.tweets.forEach((tweet, index) => {
-    let row = [
+    const row = [
       index + 1,
       escapeCsvContent(tweet)
     ];

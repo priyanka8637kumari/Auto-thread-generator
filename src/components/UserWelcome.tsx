@@ -33,8 +33,11 @@ export default function UserWelcome() {
         </h2>
         <button 
           onClick={() => signOut({ callbackUrl: '/' })}
-          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+          className="bg-gray-800/60 backdrop-blur-sm text-gray-300 hover:text-white px-4 py-2 rounded-xl border border-gray-600/40 hover:border-gray-500/60 hover:bg-gray-700/60 hover:shadow-lg hover:shadow-gray-400/20 transition-all duration-300 flex items-center gap-2 group"
         >
+          <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
           Sign out
         </button>
       </div>

@@ -64,7 +64,12 @@ export class TwitterApiClient {
    * Post a single tweet
    */
   async postTweet(text: string, replyToId?: string): Promise<PostTweetResponse> {
-    const payload: any = {
+    const payload: {
+      text: string;
+      reply?: {
+        in_reply_to_tweet_id: string;
+      };
+    } = {
       text: text.slice(0, 280), // Ensure character limit
     };
 
@@ -271,7 +276,6 @@ export function prepareThreadForPosting(tweets: string[]): string[] {
 export function makeThreadUnique(tweets: string[]): string[] {
   return tweets.map((tweet, index) => {
     // Add a unique element to each tweet while keeping it natural
-    const timestamp = Date.now();
     const uniqueElements = [
       '', // Keep some tweets unchanged
       '🧵', // Thread emoji

@@ -633,85 +633,97 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={copyEntireThread}
-                    className="btn-glass text-white px-6 py-3 rounded-xl flex items-center gap-2 text-sm font-medium hover:scale-105"
-                  >
-                    📋 Copy Thread
-                  </button>
-                  <button
-                    onClick={copyForTwitter}
-                    className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-6 py-3 rounded-xl hover:from-cyan-500 hover:to-blue-600 transition-all duration-300 flex items-center gap-2 text-sm font-medium shadow-glow-cyan hover:shadow-glow-cyan hover:scale-105"
-                  >
-                    𝕏 Copy for Twitter
-                  </button>
-                  
-                  {/* Post to Twitter Button */}
-                  <button
-                    onClick={handlePostToTwitter}
-                    disabled={individualTweets.length === 0}
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 flex items-center gap-2 text-sm font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                    title="Post thread directly to Twitter"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                    🚀 {session?.accessToken ? 'Post to X' : 'Connect to X'}
-                  </button>
-                  
-                  {/* Single Download Button with Dropdown */}
-                  <div className="relative">
+                {/* Modern Action Buttons */}
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-2xl p-3 border border-gray-600/60 shadow-lg shadow-black/20 relative z-50">
+                    {/* Download Button */}
+                    <div className="relative z-50">
+                      <button
+                        onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                        disabled={individualTweets.length === 0}
+                        className="group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-gray-800/40 border border-gray-600/40 hover:border-cyan-400/60 hover:bg-cyan-400/10 hover:shadow-lg hover:shadow-cyan-400/20 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed transform hover:scale-105"
+                        title="Download thread"
+                      >
+                        <svg className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="text-xs text-gray-300 group-hover:text-cyan-300 mt-1 font-medium">Download</span>
+                      </button>
+                      
+                      {/* Download Dropdown */}
+                      {showDownloadMenu && (
+                        <>
+                          {/* Backdrop to close dropdown */}
+                          <div 
+                            className="fixed inset-0 z-[9998]" 
+                            onClick={() => setShowDownloadMenu(false)}
+                          />
+                          <div className="absolute top-full left-0 mt-2 w-28 bg-black/95 backdrop-blur-xl border border-gray-600/50 rounded-xl shadow-2xl shadow-cyan-400/10 z-[9999]">
+                          <button
+                            onClick={() => {
+                              handleDownload('txt');
+                              setShowDownloadMenu(false);
+                            }}
+                            className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-cyan-400/10 transition-colors rounded-t-xl flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                            </svg>
+                            <span className="font-medium text-xs">TXT</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleDownload('csv');
+                              setShowDownloadMenu(false);
+                            }}
+                            className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-cyan-400/10 transition-colors rounded-b-xl flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                            </svg>
+                            <span className="font-medium text-xs">CSV</span>
+                          </button>
+                        </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Publish/Post Button */}
                     <button
-                      onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                      onClick={handlePostToTwitter}
                       disabled={individualTweets.length === 0}
-                      className="btn-glass text-white px-6 py-3 rounded-xl flex items-center gap-2 text-sm font-medium hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 group"
-                      title="Download thread in different formats"
+                      className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-gray-800/40 border border-gray-600/40 hover:border-blue-400/60 hover:bg-blue-400/10 hover:shadow-lg hover:shadow-blue-400/20 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed transform hover:scale-105"
+                      title={session?.accessToken ? "Post to X/Twitter" : "Connect to X/Twitter"}
                     >
-                      <svg className="w-4 h-4 group-hover:text-cyan-400 transition-colors" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                      <svg className="w-5 h-5 text-blue-400 group-hover:text-blue-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                       </svg>
-                      📥 Download
-                      <svg className={`w-4 h-4 transition-transform duration-200 ${showDownloadMenu ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
+                      <span className="text-xs text-gray-300 group-hover:text-blue-300 mt-1 font-medium">Publish</span>
                     </button>
-                    
-                    {showDownloadMenu && (
-                      <div className="absolute top-full mt-2 right-0 bg-black/90 backdrop-blur-xl border border-cyan-400/20 rounded-xl shadow-xl shadow-cyan-400/10 z-20 min-w-[180px] overflow-hidden">
-                        <button
-                          onClick={() => {
-                            handleDownload('txt');
-                            setShowDownloadMenu(false);
-                          }}
-                          className="w-full text-left px-4 py-3 text-white hover:bg-cyan-400/10 transition-colors flex items-center gap-3 border-b border-cyan-400/10 group"
-                        >
-                          <svg className="w-4 h-4 group-hover:text-cyan-400 transition-colors" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z"/>
-                            <path d="M6 8h8v2H6V8zm0 4h8v2H6v-2z"/>
-                          </svg>
-                          <div>
-                            <div className="font-medium">Download as TXT</div>
-                            <div className="text-xs text-gray-400">Plain text with metadata</div>
-                          </div>
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleDownload('csv');
-                            setShowDownloadMenu(false);
-                          }}
-                          className="w-full text-left px-4 py-3 text-white hover:bg-green-400/10 transition-colors flex items-center gap-3 group"
-                        >
-                          <svg className="w-4 h-4 group-hover:text-green-400 transition-colors" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                          </svg>
-                          <div>
-                            <div className="font-medium">Download as CSV</div>
-                            <div className="text-xs text-gray-400">Spreadsheet with statistics</div>
-                          </div>
-                        </button>
-                      </div>
-                    )}
+
+                    {/* Share Link Button */}
+                    <button
+                      onClick={copyForTwitter}
+                      className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-gray-800/40 border border-gray-600/40 hover:border-purple-400/60 hover:bg-purple-400/10 hover:shadow-lg hover:shadow-purple-400/20 transition-all duration-300 transform hover:scale-105"
+                      title="Copy thread for Twitter"
+                    >
+                      <svg className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                      </svg>
+                      <span className="text-xs text-gray-300 group-hover:text-purple-300 mt-1 font-medium">Share</span>
+                    </button>
+
+                    {/* Copy Thread Button (More) */}
+                    <button
+                      onClick={copyEntireThread}
+                      className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-gray-800/40 border border-gray-600/40 hover:border-emerald-400/60 hover:bg-emerald-400/10 hover:shadow-lg hover:shadow-emerald-400/20 transition-all duration-300 transform hover:scale-105"
+                      title="Copy entire thread with numbering"
+                    >
+                      <svg className="w-5 h-5 text-emerald-400 group-hover:text-emerald-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-xs text-gray-300 group-hover:text-emerald-300 mt-1 font-medium">Copy</span>
+                    </button>
                   </div>
                 </div>
               </div>

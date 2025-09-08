@@ -13,13 +13,13 @@ const Testimonial = () => {
           <div className="relative p-8 md:p-12 rounded-3xl bg-black/40 backdrop-blur-lg border border-cyan-400/20 shadow-2xl shadow-cyan-400/10">
             {/* Quote icon */}
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-cyan-400/25">
-              <span className="text-white text-xl">"</span>
+              <span className="text-white text-xl">&ldquo;</span>
             </div>
             
             {/* Quote text */}
             <blockquote className="text-xl md:text-2xl lg:text-3xl text-white font-medium mb-6 leading-relaxed">
-              "Built for students, creators, and indie devs who want to 
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"> level up their Twitter game</span>."
+              &ldquo;Built for students, creators, and indie devs who want to 
+              <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"> level up their Twitter game</span>.&rdquo;
             </blockquote>
             
             {/* Author section */}

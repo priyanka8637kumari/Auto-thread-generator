@@ -15,7 +15,6 @@ interface DemoModalProps {
 const DemoModal: React.FC<DemoModalProps> = ({
   isOpen,
   onClose,
-  videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ", // Placeholder URL
   title = "AutoThread AI Demo",
   description = "See how AutoThread AI transforms your ideas into viral Twitter threads in just seconds.",
 }) => {
@@ -85,7 +84,7 @@ const DemoModal: React.FC<DemoModalProps> = ({
                       </div>
                       <h3 className="text-xl font-semibold text-white mb-2">Demo Video Coming Soon</h3>
                       <p className="text-gray-400 max-w-md">
-                        We're creating an amazing demo video to showcase AutoThread AI's capabilities. 
+                        We&apos;re creating an amazing demo video to showcase AutoThread AI&apos;s capabilities. 
                         In the meantime, try the live demo by signing up!
                       </p>
                     </div>

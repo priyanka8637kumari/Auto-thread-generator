@@ -1,7 +1,19 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import TwitterProvider from "next-auth/providers/twitter";
-import { Session, User } from "next-auth";
+import { Session } from "next-auth";
 import { JWT } from "next-auth/jwt";
+
+interface TwitterProfile {
+  id: string;
+  name?: string;
+  email?: string;
+  image?: string;
+  username?: string;
+  screen_name?: string;
+  data?: {
+    username?: string;
+  };
+}
 
 interface ExtendedSession extends Session {
   user: {
@@ -39,20 +51,22 @@ export const authOptions: NextAuthOptions = {
       if (profile) {
         console.log('Profile data received:', JSON.stringify(profile, null, 2));
         
+        const twitterProfile = profile as TwitterProfile;
+        
         // Try multiple ways to extract the username
-        let username = null;
+        let username: string | null = null;
         
         // Method 1: Direct username field
-        if ((profile as any).username) {
-          username = (profile as any).username;
+        if (twitterProfile.username) {
+          username = twitterProfile.username;
         }
         // Method 2: From data object (Twitter API v2 format)
-        else if ((profile as any).data && (profile as any).data.username) {
-          username = (profile as any).data.username;
+        else if (twitterProfile.data?.username) {
+          username = twitterProfile.data.username;
         }
         // Method 3: From screen_name (Twitter API v1 format)
-        else if ((profile as any).screen_name) {
-          username = (profile as any).screen_name;
+        else if (twitterProfile.screen_name) {
+          username = twitterProfile.screen_name;
         }
         // Method 4: Extract from profile URL if available
         else if (profile.image && profile.image.includes('twitter.com/')) {
