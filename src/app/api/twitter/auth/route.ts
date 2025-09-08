@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TwitterAuth } from '@/lib/twitter';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const twitterAuth = new TwitterAuth();
     const authUrl = twitterAuth.getAuthorizationUrl();

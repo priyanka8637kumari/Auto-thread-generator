@@ -224,49 +224,6 @@ export default function DashboardPage() {
     navigator.clipboard.writeText(twitterThread);
   };
 
-  // Download handlers
-  const handleDownloadTxt = () => {
-    if (individualTweets.length === 0) return;
-    
-    const threadData: ThreadData = {
-      topic: topic || "Generated Thread",
-      tone: tone,
-      tweets: individualTweets,
-      timestamp: new Date()
-    };
-
-    try {
-      downloadThreadAsTxt(threadData, {
-        includeMetadata: true,
-        includeNumbering: true,
-        includeStats: true
-      });
-    } catch (error) {
-      console.error('Download failed:', error);
-      setError('Failed to download TXT file. Please try again.');
-    }
-  };
-
-  const handleDownloadCsv = () => {
-    if (individualTweets.length === 0) return;
-    
-    const threadData: ThreadData = {
-      topic: topic || "Generated Thread",
-      tone: tone,
-      tweets: individualTweets,
-      timestamp: new Date()
-    };
-
-    try {
-      downloadThreadAsCsv(threadData, {
-        includeStats: true
-      });
-    } catch (error) {
-      console.error('Download failed:', error);
-      setError('Failed to download CSV file. Please try again.');
-    }
-  };
-
   // Universal download handler with format selection
   const handleDownload = (format: 'txt' | 'csv') => {
     if (individualTweets.length === 0) return;
@@ -456,7 +413,7 @@ export default function DashboardPage() {
 
   // Close download menu when clicking outside (for dropdown version)
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (_event: MouseEvent) => {
       if (showDownloadMenu) {
         setShowDownloadMenu(false);
       }

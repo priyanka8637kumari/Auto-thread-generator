@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { Play, MoreHorizontal, MessageCircle, Repeat2, Heart } from "lucide-react";
 import { AnimatedTooltip } from "./ui/animated-tooltip";
 import { people } from "@/data/people";
+import Image from "next/image";
 
 interface HeroConversationFlowProps {
   headline?: string;
@@ -93,14 +94,6 @@ const HeroConversationFlow: React.FC<HeroConversationFlowProps> = ({
     setIsPlaying(true);
   };
 
-  // Small avatar placeholders
-  const avatarUsers = [
-    { initials: "SC", color: "from-cyan-400 to-blue-500" },
-    { initials: "MR", color: "from-purple-400 to-pink-500" },
-    { initials: "ET", color: "from-green-400 to-emerald-500" },
-    { initials: "JD", color: "from-orange-400 to-red-500" },
-  ];
-
   return (
     <section 
       className={`relative min-h-screen flex items-center justify-center overflow-hidden ${className}`}
@@ -184,7 +177,7 @@ const HeroConversationFlow: React.FC<HeroConversationFlowProps> = ({
                 <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full flex items-center justify-center">
-                      <img src="/logo.webp" alt="AutoThread Logo" className="w-12 h-12 rounded-full object-cover"/>
+                      <Image src="/logo.webp" alt="AutoThread Logo" width={48} height={48} className="w-12 h-12 rounded-full object-cover"/>
                     </div>
                     <div>
                       <div className="flex items-center gap-2">

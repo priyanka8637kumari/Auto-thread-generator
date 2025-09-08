@@ -1,12 +1,10 @@
 import { Navbar } from "@/components/NavBar";
-import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
 import { Spotlight } from "@/components/ui/Spotlight";
-import { Sparkles } from "lucide-react";
-import { people } from "@/data/people";
 import HeroSection from "@/components/HeroSection";
 import Features from "@/components/Features";
 import Testimonial from "@/components/Testimonial";
 import Footer from "@/components/Footer";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -43,7 +41,7 @@ export default function Home() {
        <nav className="w-full pt-6 relative z-20">
         <div className="flex justify-between items-center max-w-7xl mx-auto px-4">
           <div className="flex items-center gap-3 pt-2">
-            <img src="/logo.webp" alt="AutoThread AI" className="w-12 h-12 rounded-full object-cover" />
+            <Image src="/logo.webp" alt="AutoThread AI" width={48} height={48} className="w-12 h-12 rounded-full object-cover" />
             <span className="text-white font-bold text-xl">AutoThread</span>
           </div>
           <Navbar />

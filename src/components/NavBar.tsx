@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { Menu, MenuItem } from "./ui/navbar-menu";
 import { cn } from "@/lib/utils";
-import { Sparkles } from "lucide-react";
 
 export function Navbar({ className }: { className?: string }) {
   const [active, setActive] = useState<string | null>(null);

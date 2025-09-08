@@ -3,7 +3,7 @@
  * Handles authentication via NextAuth and posting functionality
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { TwitterUser } from '@/lib/twitter';
 
@@ -18,8 +18,22 @@ interface TwitterHookState {
   postingIndex: number | null;
 }
 
+// Extended session interface that matches our NextAuth configuration
+interface ExtendedSession {
+  user?: {
+    id?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    username?: string | null;
+  };
+  accessToken?: string;
+}
+
 export function useTwitter(options: UseTwitterOptions = {}) {
-  const { data: session } = useSession();
+  const { data: sessionData } = useSession();
+  const session = sessionData as ExtendedSession;
+  
   const [state, setState] = useState<TwitterHookState>({
     isPosting: false,
     postingProgress: 0,
@@ -29,13 +43,15 @@ export function useTwitter(options: UseTwitterOptions = {}) {
   // Check if user is connected to Twitter (has NextAuth session)
   const isConnected = !!session?.user;
 
-  // Get user info from NextAuth session
-  const user: TwitterUser | null = session?.user ? {
-    id: session.user.id || '',
-    username: session.user.name?.replace('@', '') || '',
-    name: session.user.name || '',
-    profile_image_url: session.user.image || undefined,
-  } : null;
+  // Get user info from NextAuth session (memoized to prevent dependency issues)
+  const user: TwitterUser | null = useMemo(() => {
+    return session?.user ? {
+      id: session.user.id || '',
+      username: session.user.name?.replace('@', '') || '',
+      name: session.user.name || '',
+      profile_image_url: session.user.image || undefined,
+    } : null;
+  }, [session?.user]);
 
   // Connect to Twitter (redirect to NextAuth)
   const connectTwitter = useCallback(async () => {
@@ -172,7 +188,7 @@ export function useTwitter(options: UseTwitterOptions = {}) {
       const { signOut } = await import('next-auth/react');
       await signOut();
       options.onSuccess?.('Disconnected from Twitter');
-    } catch (error) {
+    } catch (_error) {
       options.onError?.('Failed to disconnect');
     }
   }, [options]);

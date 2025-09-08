@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { createTwitterClient, validateTweet, prepareThreadForPosting, makeThreadUnique } from '@/lib/twitter';
+import { authOptions } from '@/lib/auth';
+import { createTwitterClient, validateTweet, prepareThreadForPosting } from '@/lib/twitter';
 
 export async function POST(request: NextRequest) {
   try {

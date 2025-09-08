@@ -1,10 +1,6 @@
 'use client';
 
 import React, { useState } from 'react'
-import { Sparkles } from 'lucide-react';
-import { people } from '@/data/people';
-import { AnimatedTooltip } from './ui/animated-tooltip';
-import LoginButton from './LoginButton';
 import HeroConversationFlow from './HeroConversationFlow';
 import DemoModal from './ui/demo-modal';
 import { signIn, useSession } from 'next-auth/react';
