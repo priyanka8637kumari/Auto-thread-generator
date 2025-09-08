@@ -30,6 +30,10 @@ body {
   }
 }
 
+.animate-spotlight {
+  animation: spotlight 2s ease-out forwards;
+}
+
 /* Custom gradient utilities */
 .bg-gradient-radial {
   background-image: radial-gradient(var(--tw-gradient-stops));

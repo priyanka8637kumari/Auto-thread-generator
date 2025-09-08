@@ -31,10 +31,10 @@ export default function Home() {
         }}
       ></div>
       {/* Content Container */}
-      <div className="relative z-10">
+      <div className="relative z-50">
         <Spotlight
-          className="-top-40 left-0 md:-top-20 md:left-60"
-          fill="#0891b2"
+          className="-top-40 left-0 md:-top-20 md:left-60 !z-[100]"
+          fill="#67e8f9"  // Tailwind cyan-300 (lighter, more visible)
         />
         
         {/* Navigation */}
