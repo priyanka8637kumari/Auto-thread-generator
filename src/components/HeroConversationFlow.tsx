@@ -145,7 +145,7 @@ const HeroConversationFlow: React.FC<HeroConversationFlowProps> = ({
                 whileTap={{ scale: 0.98 }}
                 aria-label="Watch a 30 second demo"
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center justify-center gap-2">
                   <Play className="w-5 h-5 group-hover:text-cyan-400 transition-colors" />
                   {secondaryButtonText}
                 </span>

@@ -309,7 +309,7 @@ export default function DashboardPage() {
     if (individualTweets.length === 0) return;
     
     if (!session?.accessToken) {
-      setError('Twitter access token not available. Please log in again.');
+      setError('Twitter access token not available. Please log out and log back in to refresh your Twitter connection.');
       return;
     }
 
@@ -343,7 +343,7 @@ export default function DashboardPage() {
           setError(`${data.error} Please refresh the page and log in again.`);
           setShowRetryWithUnique(false);
         } else {
-          setError(data.error || 'Failed to post thread');
+          setError(data.error || `Failed to post thread (Status: ${response.status})`);
           setShowRetryWithUnique(false);
         }
         throw new Error(data.error || 'Failed to post thread');
@@ -575,11 +575,11 @@ export default function DashboardPage() {
         {individualTweets.length > 0 && (
           <div className="max-w-6xl mx-auto">
             {/* Header with multiple copy options */}
-            <div className="glass-card rounded-3xl p-6 mb-6 shadow-glow-cyan">
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                <div>
-                  <h2 className="text-3xl font-bold text-white mb-2">Generated Thread</h2>
-                  <div className="text-gray-400 text-sm flex items-center gap-4">
+            <div className="glass-card rounded-3xl p-4 sm:p-6 mb-6 shadow-glow-cyan">
+              <div className="flex flex-col lg:flex-row justify-between items-center lg:items-center gap-4">
+                <div className="text-center lg:text-left w-full lg:w-auto">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Generated Thread</h2>
+                  <div className="text-gray-400 text-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 justify-center lg:justify-start">
                     <span className="flex items-center gap-2">
                       <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
                       <span className="font-medium">{individualTweets.length} tweets</span>
@@ -590,21 +590,21 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 </div>
-                {/* Modern Action Buttons */}
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-2xl p-3 border border-gray-600/60 shadow-lg shadow-black/20 relative z-50">
+                {/* Modern Action Buttons - Responsive */}
+                <div className="flex justify-center lg:justify-end w-full lg:w-auto">
+                  <div className="flex flex-wrap lg:flex-nowrap items-center justify-center gap-2 lg:gap-1 bg-black/60 backdrop-blur-sm rounded-2xl p-2 sm:p-3 border border-gray-600/60 shadow-lg shadow-black/20 relative z-50 max-w-full overflow-hidden">
                     {/* Download Button */}
                     <div className="relative z-50">
                       <button
                         onClick={() => setShowDownloadMenu(!showDownloadMenu)}
                         disabled={individualTweets.length === 0}
-                        className="group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-gray-800/40 border border-gray-600/40 hover:border-cyan-400/60 hover:bg-cyan-400/10 hover:shadow-lg hover:shadow-cyan-400/20 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed transform hover:scale-105"
+                        className="group relative flex flex-col items-center justify-center w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl bg-gray-800/40 border border-gray-600/40 hover:border-cyan-400/60 hover:bg-cyan-400/10 hover:shadow-lg hover:shadow-cyan-400/20 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed transform hover:scale-105"
                         title="Download thread"
                       >
-                        <svg className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-5 lg:h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <span className="text-xs text-gray-300 group-hover:text-cyan-300 mt-1 font-medium">Download</span>
+                        <span className="text-[10px] sm:text-xs lg:text-xs text-gray-300 group-hover:text-cyan-300 mt-0.5 sm:mt-1 font-medium hidden sm:block lg:block">Download</span>
                       </button>
                       
                       {/* Download Dropdown */}
@@ -615,30 +615,30 @@ export default function DashboardPage() {
                             className="fixed inset-0 z-[9998]" 
                             onClick={() => setShowDownloadMenu(false)}
                           />
-                          <div className="absolute top-full left-0 mt-2 w-28 bg-black/95 backdrop-blur-xl border border-gray-600/50 rounded-xl shadow-2xl shadow-cyan-400/10 z-[9999]">
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-24 sm:w-28 bg-black/95 backdrop-blur-xl border border-gray-600/50 rounded-xl shadow-2xl shadow-cyan-400/10 z-[9999]">
                           <button
                             onClick={() => {
                               handleDownload('txt');
                               setShowDownloadMenu(false);
                             }}
-                            className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-cyan-400/10 transition-colors rounded-t-xl flex items-center gap-2"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-left text-gray-300 hover:text-white hover:bg-cyan-400/10 transition-colors rounded-t-xl flex items-center gap-1 sm:gap-2"
                           >
-                            <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
                             </svg>
-                            <span className="font-medium text-xs">TXT</span>
+                            <span className="font-medium text-[10px] sm:text-xs">TXT</span>
                           </button>
                           <button
                             onClick={() => {
                               handleDownload('csv');
                               setShowDownloadMenu(false);
                             }}
-                            className="w-full px-4 py-3 text-left text-gray-300 hover:text-white hover:bg-cyan-400/10 transition-colors rounded-b-xl flex items-center gap-2"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-left text-gray-300 hover:text-white hover:bg-cyan-400/10 transition-colors rounded-b-xl flex items-center gap-1 sm:gap-2"
                           >
-                            <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
                             </svg>
-                            <span className="font-medium text-xs">CSV</span>
+                            <span className="font-medium text-[10px] sm:text-xs">CSV</span>
                           </button>
                         </div>
                         </>
@@ -649,37 +649,37 @@ export default function DashboardPage() {
                     <button
                       onClick={handlePostToTwitter}
                       disabled={individualTweets.length === 0}
-                      className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-gray-800/40 border border-gray-600/40 hover:border-blue-400/60 hover:bg-blue-400/10 hover:shadow-lg hover:shadow-blue-400/20 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed transform hover:scale-105"
+                      className="group flex flex-col items-center justify-center w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl bg-gray-800/40 border border-gray-600/40 hover:border-blue-400/60 hover:bg-blue-400/10 hover:shadow-lg hover:shadow-blue-400/20 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed transform hover:scale-105"
                       title={session?.accessToken ? "Post to X/Twitter" : "Connect to X/Twitter"}
                     >
-                      <svg className="w-5 h-5 text-blue-400 group-hover:text-blue-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-5 lg:h-5 text-blue-400 group-hover:text-blue-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                       </svg>
-                      <span className="text-xs text-gray-300 group-hover:text-blue-300 mt-1 font-medium">Publish</span>
+                      <span className="text-[10px] sm:text-xs lg:text-xs text-gray-300 group-hover:text-blue-300 mt-0.5 sm:mt-1 font-medium hidden sm:block lg:block">Publish</span>
                     </button>
 
                     {/* Share Link Button */}
                     <button
                       onClick={copyForTwitter}
-                      className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-gray-800/40 border border-gray-600/40 hover:border-purple-400/60 hover:bg-purple-400/10 hover:shadow-lg hover:shadow-purple-400/20 transition-all duration-300 transform hover:scale-105"
+                      className="group flex flex-col items-center justify-center w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl bg-gray-800/40 border border-gray-600/40 hover:border-purple-400/60 hover:bg-purple-400/10 hover:shadow-lg hover:shadow-purple-400/20 transition-all duration-300 transform hover:scale-105"
                       title="Copy thread for Twitter"
                     >
-                      <svg className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-5 lg:h-5 text-purple-400 group-hover:text-purple-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                       </svg>
-                      <span className="text-xs text-gray-300 group-hover:text-purple-300 mt-1 font-medium">Share</span>
+                      <span className="text-[10px] sm:text-xs lg:text-xs text-gray-300 group-hover:text-purple-300 mt-0.5 sm:mt-1 font-medium hidden sm:block lg:block">Share</span>
                     </button>
 
                     {/* Copy Thread Button (More) */}
                     <button
                       onClick={copyEntireThread}
-                      className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-gray-800/40 border border-gray-600/40 hover:border-emerald-400/60 hover:bg-emerald-400/10 hover:shadow-lg hover:shadow-emerald-400/20 transition-all duration-300 transform hover:scale-105"
+                      className="group flex flex-col items-center justify-center w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl bg-gray-800/40 border border-gray-600/40 hover:border-emerald-400/60 hover:bg-emerald-400/10 hover:shadow-lg hover:shadow-emerald-400/20 transition-all duration-300 transform hover:scale-105"
                       title="Copy entire thread with numbering"
                     >
-                      <svg className="w-5 h-5 text-emerald-400 group-hover:text-emerald-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-5 lg:h-5 text-emerald-400 group-hover:text-emerald-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
-                      <span className="text-xs text-gray-300 group-hover:text-emerald-300 mt-1 font-medium">Copy</span>
+                      <span className="text-[10px] sm:text-xs lg:text-xs text-gray-300 group-hover:text-emerald-300 mt-0.5 sm:mt-1 font-medium hidden sm:block lg:block">Copy</span>
                     </button>
                   </div>
                 </div>
@@ -713,11 +713,11 @@ export default function DashboardPage() {
             </div>
 
             {/* Additional Actions */}
-            <div className="mt-8 text-center">
-              <div className="glass-card rounded-2xl p-6 inline-block">
-                <p className="text-gray-300 text-sm flex items-center gap-3">
-                  <span className="text-xl animate-pulse">💡</span>
-                  <span className="font-medium">Tip: Individual tweets can be copied using the 📋 button on each card</span>
+            <div className="mt-8 text-center px-4">
+              <div className="glass-card rounded-2xl p-4 sm:p-6 inline-block max-w-full">
+                <p className="text-gray-300 text-xs sm:text-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+                  <span className="text-lg sm:text-xl animate-pulse">💡</span>
+                  <span className="font-medium text-center sm:text-left">Tip: Individual tweets can be copied using the 📋 button on each card</span>
                 </p>
               </div>
             </div>
@@ -911,7 +911,27 @@ export default function DashboardPage() {
                       Connect X Account
                     </button>
                   )}
-                </div>
+                </div>                  {/* Mobile Button Labels - Only shown on small screens */}
+                  <div className="flex sm:hidden lg:hidden justify-center items-center mt-3 px-2 w-full">
+                    <div className="flex items-center justify-center gap-4 text-[10px] text-gray-400">
+                      <span className="text-center">
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full mx-auto mb-1"></div>
+                        Download
+                      </span>
+                      <span className="text-center">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full mx-auto mb-1"></div>
+                        Publish
+                      </span>
+                      <span className="text-center">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full mx-auto mb-1"></div>
+                        Share
+                      </span>
+                      <span className="text-center">
+                        <div className="w-2 h-2 bg-emerald-400 rounded-full mx-auto mb-1"></div>
+                        Copy
+                      </span>
+                    </div>
+                  </div>
               </div>
             </div>
           </div>

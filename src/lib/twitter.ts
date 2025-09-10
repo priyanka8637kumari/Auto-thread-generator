@@ -119,9 +119,9 @@ export class TwitterApiClient {
 
     for (let i = 0; i < tweets.length; i++) {
       try {
-        // Add a small delay between tweets to avoid rate limits
+        // Add a delay between tweets to avoid rate limits
         if (i > 0) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 3000));
         }
 
         const result = await this.postTweet(tweets[i], replyToId);
