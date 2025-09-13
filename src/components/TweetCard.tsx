@@ -8,6 +8,7 @@ interface TweetCardProps {
   onEditSave?: () => void;
   onEditCancel?: () => void;
   onEditChange?: (value: string) => void;
+  onDelete?: () => void;
   userName?: string;
   userHandle?: string;
 }
@@ -22,6 +23,7 @@ const TweetCard = ({
   onEditSave,
   onEditCancel,
   onEditChange,
+  onDelete,
   userName = "You",
   userHandle = "@username",
 }: TweetCardProps) => {
@@ -139,6 +141,15 @@ const TweetCard = ({
                   >
                     📋
                   </button>
+                  {onDelete && (
+                    <button
+                      onClick={onDelete}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-400/10 p-2 rounded-xl transition-all duration-200 border border-transparent hover:border-red-400/20"
+                      title="Delete tweet"
+                    >
+                      🗑️
+                    </button>
+                  )}
                 </>
               )}
             </div>

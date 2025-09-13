@@ -7,7 +7,7 @@ export function Navbar({ className }: { className?: string }) {
   const [active, setActive] = useState<string | null>(null);
   return (
     <div
-      className={cn("fixed top-6 inset-x-0 max-w-2xl mx-auto z-50", className)}
+      className={cn("relativeinset-x-0 max-w-sm sm:max-w-lg sm:w-full z-50", className)}
     >
       {/* <div className="flex items-center justify-between px-6"> */}
         {/* Logo Section */}
@@ -24,7 +24,7 @@ export function Navbar({ className }: { className?: string }) {
             <div className="flex flex-col space-y-3 text-sm p-2">
               <div className="text-gray-300">
                 <p className="text-white font-semibold mb-2">Learn More</p>
-                <p className="text-gray-400 text-xs max-w-[200px]">
+                <p className="text-gray-400 text-xs max-w-[160px] sm:max-w-[180px]">
                   Discover how AutoThread can transform your Twitter presence with AI-powered content generation.
                 </p>
               </div>

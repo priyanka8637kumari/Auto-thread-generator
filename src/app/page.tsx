@@ -38,7 +38,7 @@ export default function Home() {
         />
         
         {/* Navigation */}
-       <nav className="w-full pt-6 relative z-20">
+      <nav className="w-full pt-6 relative z-20">
         <div className="flex justify-between items-center max-w-7xl mx-auto px-4">
           <div className="flex items-center gap-3 pt-2">
             <Image src="/logo.webp" alt="AutoThread AI" width={48} height={48} className="w-12 h-12 rounded-full object-cover" />

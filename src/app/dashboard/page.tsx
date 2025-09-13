@@ -4,8 +4,6 @@ import TweetCard from "@/components/TweetCard";
 import UserWelcome from "@/components/UserWelcome";
 import { useState, useEffect } from "react";
 import { 
-  downloadThreadAsTxt, 
-  downloadThreadAsCsv, 
   downloadThread,
   type ThreadData 
 } from "@/lib/utils";
@@ -40,6 +38,10 @@ export default function DashboardPage() {
   const [postingIndex, setPostingIndex] = useState<number | null>(null); // Which tweet is being posted
   const [showRetryWithUnique, setShowRetryWithUnique] = useState(false); // Show retry option for duplicates
   const [twitterUsername, setTwitterUsername] = useState<string | null>(null); // Fallback Twitter username
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Show delete confirmation modal
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null); // Index of tweet to delete
+  const [postedTweetUrls, setPostedTweetUrls] = useState<string[]>([]); // URLs of posted tweets
+  const [showSuccessModal, setShowSuccessModal] = useState(false); // Show success modal with tweet links
 
   // Get session from NextAuth
   const { data: sessionData } = useSession();
@@ -139,6 +141,19 @@ export default function DashboardPage() {
       }
 
       setPostingProgress(100);
+      
+      // Store tweet URLs if available
+      if (data.tweetUrls && Array.isArray(data.tweetUrls)) {
+        setPostedTweetUrls(data.tweetUrls);
+        setShowSuccessModal(true);
+      } else {
+        // Fallback: Open user's Twitter profile
+        const username = session?.user?.username || twitterUsername;
+        if (username) {
+          window.open(`https://twitter.com/${username}`, '_blank');
+        }
+      }
+      
       setSuccessMessage(`Thread with ${uniqueTweets.length} tweets posted successfully with unique content!`);
       setTimeout(() => setSuccessMessage(""), 5000);
       setShowPostToTwitter(false);
@@ -204,6 +219,43 @@ export default function DashboardPage() {
 
   const handleEditChange = (value: string) => {
     setEditValue(value);
+  };
+
+  const handleDelete = (index: number) => {
+    // Show custom confirmation dialog
+    setDeleteIndex(index);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteIndex === null) return;
+    
+    const updatedTweets = individualTweets.filter((_, i) => i !== deleteIndex);
+    setIndividualTweets(updatedTweets);
+    
+    // If we're editing the deleted tweet, cancel editing
+    if (editingIndex === deleteIndex) {
+      setEditingIndex(null);
+      setEditValue("");
+    } else if (editingIndex !== null && editingIndex > deleteIndex) {
+      // Adjust editing index if needed
+      setEditingIndex(editingIndex - 1);
+    }
+    
+    // Close confirmation dialog
+    setShowDeleteConfirm(false);
+    setDeleteIndex(null);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setDeleteIndex(null);
+  };
+
+  // Helper function to close success modal
+  const closeSuccessModal = () => {
+    setShowSuccessModal(false);
+    setPostedTweetUrls([]);
   };
 
   // Copy entire thread function
@@ -291,6 +343,18 @@ export default function DashboardPage() {
         }
       }
 
+      // Handle successful single tweet post
+      if (data.tweetUrl) {
+        // Open the posted tweet directly
+        window.open(data.tweetUrl, '_blank');
+      } else {
+        // Fallback: Open user's Twitter profile
+        const username = session?.user?.username || twitterUsername;
+        if (username) {
+          window.open(`https://twitter.com/${username}`, '_blank');
+        }
+      }
+
       setSuccessMessage(`Tweet ${index + 1} posted successfully!`);
       setTimeout(() => setSuccessMessage(""), 5000);
 
@@ -350,6 +414,19 @@ export default function DashboardPage() {
       }
 
       setPostingProgress(100);
+      
+      // Store tweet URLs if available
+      if (data.tweetUrls && Array.isArray(data.tweetUrls)) {
+        setPostedTweetUrls(data.tweetUrls);
+        setShowSuccessModal(true);
+      } else {
+        // Fallback: Open user's Twitter profile
+        const username = session?.user?.username || twitterUsername;
+        if (username) {
+          window.open(`https://twitter.com/${username}`, '_blank');
+        }
+      }
+      
       setSuccessMessage(`Thread with ${individualTweets.length} tweets posted successfully!`);
       setTimeout(() => setSuccessMessage(""), 5000);
       setShowPostToTwitter(false);
@@ -413,7 +490,7 @@ export default function DashboardPage() {
 
   // Close download menu when clicking outside (for dropdown version)
   useEffect(() => {
-    const handleClickOutside = (_event: MouseEvent) => {
+    const handleClickOutside = () => {
       if (showDownloadMenu) {
         setShowDownloadMenu(false);
       }
@@ -501,6 +578,11 @@ export default function DashboardPage() {
                 <option value="witty" className="bg-black">Witty</option>
                 <option value="storytelling" className="bg-black">Storytelling</option>
                 <option value="motivational" className="bg-black">Motivational</option>
+                <option value="informative" className="bg-black">Informative</option>
+                <option value="inspirational" className="bg-black">Inspirational</option>
+                <option value="casual" className="bg-black">Casual</option>
+                <option value="Controversial" className="bg-black">Controversial</option>
+                
               </select>
             </div>
 
@@ -508,10 +590,31 @@ export default function DashboardPage() {
             <button
               onClick={handleGenerate}
               disabled={loading || !topic.trim()}
-              className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:from-cyan-500 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-cyan hover:shadow-glow-cyan hover:scale-[1.02] hover:-translate-y-1"
+              className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:from-cyan-500 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-cyan hover:shadow-glow-cyan hover:scale-[1.02] hover:-translate-y-1 flex items-center justify-center gap-3"
             >
-              ✨ {loading ? "Generating Amazing Content..." : "Generate Thread"}
+              {loading ? (
+                <>
+                  {/* Spinning loader */}
+                  <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Generating Amazing Content...</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-xl">✨</span>
+                  <span>Generate Thread</span>
+                </>
+              )}
             </button>
+
+            {/* Loading message */}
+            {loading && (
+              <div className="mt-4 text-center">
+                <p className="text-gray-400 text-sm flex items-center justify-center gap-2">
+                  <span className="text-purple-400">✨</span>
+                  <span>Brewing up some magic...</span>
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -563,10 +666,30 @@ export default function DashboardPage() {
         {successMessage && (
           <div className="max-w-4xl mx-auto mb-8">
             <div className="bg-green-900/40 backdrop-blur-lg border border-green-500/30 rounded-2xl p-6 shadow-xl shadow-green-500/10">
-              <p className="text-green-200 flex items-center gap-3 text-lg">
-                <span className="text-2xl">✅</span>
-                <span className="font-medium">{successMessage}</span>
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-green-200 flex items-center gap-3 text-lg">
+                  <span className="text-2xl">✅</span>
+                  <span className="font-medium">{successMessage}</span>
+                </p>
+                
+                {/* Show View on X button if success message indicates posting */}
+                {successMessage.includes('posted') && (
+                  <button
+                    onClick={() => {
+                      const username = session?.user?.username || twitterUsername;
+                      if (username) {
+                        window.open(`https://twitter.com/${username}`, '_blank');
+                      }
+                    }}
+                    className="ml-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                    View on X
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -700,6 +823,7 @@ export default function DashboardPage() {
                   onEditSave={() => handleEditSave(index)}
                   onEditCancel={handleEditCancel}
                   onEditChange={handleEditChange}
+                  onDelete={() => handleDelete(index)} // Pass delete handler
                   userName={session?.user?.name || "You"}
                   userHandle={
                     session?.user?.username 
@@ -932,6 +1056,212 @@ export default function DashboardPage() {
                       </span>
                     </div>
                   </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && deleteIndex !== null && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={cancelDelete}
+            />
+            
+            {/* Modal */}
+            <div className="relative bg-black/90 backdrop-blur-xl rounded-3xl border border-red-400/30 shadow-2xl shadow-red-400/20 w-full max-w-md">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-red-400/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Delete Tweet</h2>
+                    <p className="text-gray-400 text-sm">This action cannot be undone</p>
+                  </div>
+                </div>
+                <button
+                  onClick={cancelDelete}
+                  className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="text-center">
+                  <div className="mb-4">
+                    <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-2">
+                      Are you sure you want to delete tweet {deleteIndex + 1}?
+                    </h3>
+                    <p className="text-gray-400 mb-4">
+                      This will permanently remove the tweet from your thread. This action cannot be undone.
+                    </p>
+                    
+                    {/* Show preview of tweet being deleted */}
+                    <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-6 text-left">
+                      <p className="text-red-200 text-sm font-medium mb-2">Tweet to be deleted:</p>
+                      <p className="text-gray-300 text-sm leading-relaxed">
+                        {individualTweets[deleteIndex]?.substring(0, 100)}
+                        {individualTweets[deleteIndex]?.length > 100 ? '...' : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="p-6 border-t border-red-400/20 bg-black/50">
+                <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                  <button
+                    onClick={cancelDelete}
+                    className="px-6 py-3 text-gray-300 hover:text-white transition-colors border border-gray-600 hover:border-gray-500 rounded-xl bg-black/40 hover:bg-black/60"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl transition-all duration-300 flex items-center gap-2 font-medium shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete Tweet
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Success Modal with Tweet Links */}
+        {showSuccessModal && postedTweetUrls.length > 0 && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={closeSuccessModal}
+            />
+            
+            {/* Modal */}
+            <div className="relative bg-black/90 backdrop-blur-xl rounded-3xl border border-green-400/30 shadow-2xl shadow-green-400/20 w-full max-w-2xl max-h-[80vh] overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-green-400/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">🎉 Thread Posted Successfully!</h2>
+                    <p className="text-gray-400 text-sm">
+                      Your {postedTweetUrls.length} tweet{postedTweetUrls.length > 1 ? 's have' : ' has'} been posted to X
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeSuccessModal}
+                  className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 max-h-[50vh] overflow-y-auto glass-scrollbar">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    Ready to see your {postedTweetUrls.length > 1 ? 'thread' : 'tweet'} live?
+                  </h3>
+                  <p className="text-gray-400 mb-6">
+                    Click on any tweet below to view it on X (Twitter)
+                  </p>
+                </div>
+
+                {/* Tweet Links */}
+                <div className="space-y-3">
+                  {postedTweetUrls.map((url, index) => (
+                    <div key={index} className="group">
+                      <button
+                        onClick={() => window.open(url, '_blank')}
+                        className="w-full p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 hover:from-blue-500/20 hover:to-purple-500/20 border border-blue-400/30 hover:border-blue-400/50 rounded-xl transition-all duration-300 text-left flex items-center justify-between group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                            <span className="text-blue-400 font-semibold text-sm">{index + 1}</span>
+                          </div>
+                          <div>
+                            <p className="text-white font-medium">
+                              {postedTweetUrls.length > 1 ? `Tweet ${index + 1} of ${postedTweetUrls.length}` : 'Your Tweet'}
+                            </p>
+                            <p className="text-gray-400 text-sm">
+                              {individualTweets[index]?.substring(0, 60)}
+                              {individualTweets[index]?.length > 60 ? '...' : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-blue-400 group-hover:text-blue-300 transition-colors">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </div>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="p-6 border-t border-green-400/20 bg-black/50">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={() => window.open(postedTweetUrls[0], '_blank')}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-300 flex items-center gap-2 font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                    {postedTweetUrls.length > 1 ? 'View Thread on X' : 'View Tweet on X'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      const username = session?.user?.username || twitterUsername;
+                      if (username) {
+                        window.open(`https://twitter.com/${username}`, '_blank');
+                      }
+                    }}
+                    className="px-6 py-3 text-gray-300 hover:text-white transition-colors border border-gray-600 hover:border-gray-500 rounded-xl bg-black/40 hover:bg-black/60"
+                  >
+                    View Your Profile
+                  </button>
+                  <button
+                    onClick={closeSuccessModal}
+                    className="px-6 py-3 text-gray-300 hover:text-white transition-colors border border-gray-600 hover:border-gray-500 rounded-xl bg-black/40 hover:bg-black/60"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>

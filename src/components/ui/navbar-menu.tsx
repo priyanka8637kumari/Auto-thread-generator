@@ -29,7 +29,7 @@ export const MenuItem = ({
     <div onMouseEnter={() => setActive(item)} className="relative group">
       <motion.p
         transition={{ duration: 0.3 }}
-        className="cursor-pointer text-white/90 hover:text-white font-medium px-4 py-2 rounded-lg relative overflow-hidden transition-all duration-300 hover:bg-cyan-400/10 hover:shadow-lg hover:shadow-cyan-400/20 border border-transparent hover:border-cyan-400/30"
+        className="cursor-pointer text-white/90 hover:text-white font-medium px-2 sm:px-3 md:px-4 py-2 rounded-lg relative overflow-hidden transition-all duration-300 hover:bg-cyan-400/10 hover:shadow-lg hover:shadow-cyan-400/20 border border-transparent hover:border-cyan-400/30 text-sm sm:text-base"
       >
         {/* Subtle glow effect on hover */}
         <span className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-400/5 to-cyan-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
@@ -46,11 +46,11 @@ export const MenuItem = ({
           transition={transition}
         >
           {active === item && children && (
-            <div className="absolute top-[calc(100%_+_1.2rem)] left-1/2 transform -translate-x-1/2 pt-4">
+            <div className="absolute top-[calc(100%_+_1.2rem)] left-1/2 transform -translate-x-1/2 pt-4 sm:left-1/2 sm:-translate-x-1/2 xs:left-0 xs:translate-x-0">
               <motion.div
                 transition={transition}
                 layoutId="active" // layoutId ensures smooth animation
-                className="bg-black/80 backdrop-blur-xl rounded-2xl overflow-hidden border border-cyan-400/40 shadow-2xl shadow-cyan-500/25"
+                className="bg-black/80 backdrop-blur-xl rounded-2xl overflow-hidden border border-cyan-400/40 shadow-2xl shadow-cyan-500/25 min-w-[200px] sm:min-w-[250px]"
               >
                 <motion.div
                   layout // layout ensures smooth animation
@@ -77,7 +77,7 @@ export const Menu = ({
   return (
     <nav
       onMouseLeave={() => setActive(null)} // resets the state
-      className="relative rounded-full bg-black/20 backdrop-blur-xl border border-cyan-400/30 shadow-xl shadow-cyan-500/10 flex justify-center items-center space-x-2 px-6 py-3 hover:shadow-cyan-500/20 hover:border-cyan-400/50 hover:bg-black/30 transition-all duration-300"
+      className="relative rounded-full bg-black/20 backdrop-blur-xl border border-cyan-400/30 shadow-xl shadow-cyan-500/10 flex justify-center items-center space-x-1 sm:space-x-2 px-3 sm:px-4 md:px-6 py-2 sm:py-3 hover:shadow-cyan-500/20 hover:border-cyan-400/50 hover:bg-black/30 transition-all duration-300"
     >
       {children}
     </nav>
